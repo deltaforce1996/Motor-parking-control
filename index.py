@@ -141,11 +141,10 @@ while True:
 
     while True:
         pos_estimate = read_estimate_position()
-        pos_estimate < target_position
         progress_fraction = min(pos_estimate / target_position, 1.0)
         progress_bar.n = round(progress_fraction * progress_bar.total)
         progress_bar.refresh()
-        if (pos_estimate > target_position):
+        if (pos_estimate >= target_position):
             progress_bar.close()
             motor_idel()
             break

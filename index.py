@@ -7,11 +7,11 @@ import time
 WAITING_TIME_LOOP = 0.2
 my_list = []
 
+print("Finding an ODrive...")
 odrv0 = odrive.find_any()
 odrive_controller = ODriveController(odrv0)
 motor_controller = MotorController(odrive_controller, "axis0")
 
-print("Finding an ODrive...")
 odrive_controller.clear_errors()
 odrive_controller.set_init_configs()
 motor_controller.set_init_configs()

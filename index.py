@@ -2,9 +2,13 @@ import odrive
 from tqdm import tqdm
 from controllers.odrive_controller import ODriveController
 from controllers.motor_controller import MotorController
+from helpers.enums import *
 import time
+# import threading
 
 WAITING_TIME_LOOP = 0.2
+PROXIMITY_SENSOR_PIN = 6
+
 my_list = []
 
 print("Finding an ODrive...")
@@ -15,21 +19,28 @@ motor_controller = MotorController(odrive_controller, "axis0")
 odrive_controller.clear_errors()
 odrive_controller.set_init_configs()
 motor_controller.set_init_configs()
+
+odrive_controller.set_config_gpio_mode(PROXIMITY_SENSOR_PIN, GpioMode.DIGITAL.value)
+motor_controller.set_min_endstop(PROXIMITY_SENSOR_PIN)
+odrive_controller.set_config_gpio_mode(PROXIMITY_SENSOR_PIN, GpioMode.DIGITAL_PULL_UP.value)
+
 motor_controller.calibration_sequence()
+
 odrive_controller.read_errors()
 motor_controller.read_errors()
-
 
 while True:
     motor_controller.wait_to_idel()
     motor_controller.set_controller_config_position_control()
     motor_controller.motor_closed_loop_control()
 
+    motor_controller.set_enable_min_endstop(True)
+
     print("Set Zeoro Position...")
     motor_controller.set_position(0)
 
     while True:
-        if motor_controller.read_estimate_position() <= 0:
+        if motor_controller.read_estimate_position() <= 0 or motor_controller.read_motor_minstop_state():
             break
         time.sleep(WAITING_TIME_LOOP)
 
@@ -42,7 +53,7 @@ while True:
         progress_fraction = min(pos_estimate / target_position, 1.0)
         progress_bar.n = round(progress_fraction * progress_bar.total)
         progress_bar.refresh()
-        if pos_estimate >= target_position:
+        if pos_estimate >= target_position or motor_controller.read_motor_minstop_state():
             progress_bar.close()
             motor_controller.motor_idel()
             break
@@ -52,6 +63,8 @@ while True:
 
     while motor_controller.read_estimate_velocity() > 3:
         time.sleep(WAITING_TIME_LOOP)
+
+    motor_controller.set_enable_min_endstop(False)
 
     motor_controller.motor_closed_loop_control()
 

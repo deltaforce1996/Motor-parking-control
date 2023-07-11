@@ -33,6 +33,23 @@ class MotorController(DeviceManager):
         self.__axis.trap_traj.config.accel_limit = 5
         self.__axis.trap_traj.config.decel_limit = 5
 
+    def set_min_endstop(self, pin_num):
+        self.__axis.min_endstop.config.gpio_num = pin_num
+        self.__axis.min_endstop.config.is_active_high = False
+        self.__axis.min_endstop.config.offset = -0.25
+        self.__axis.min_endstop.config.enabled = True
+        self.__axis.min_endstop.config.debounce_ms  = 50.0
+
+    def set_max_endstop(self, pin_num):
+        self.__axis.max_endstop.config.gpio_num = pin_num
+        self.__axis.max_endstop.config.enabled = True
+        self.__axis.min_endstop.config.is_active_high = False
+        self.__axis.min_endstop.config.offset = -0.25
+        self.__axis.min_endstop.config.debounce_ms  = 50.0
+
+    def set_enable_min_endstop(self, value_b):
+        self.__axis.min_endstop.config.enabled = value_b
+
     def wait_to_idel(self):
         while self.__axis.current_state != AxisState.IDLE:
             print(AxisState(self.read_motor_current_state()).name)
@@ -72,18 +89,9 @@ class MotorController(DeviceManager):
         self.wait_to_idel()
 
     def read_errors(self):
-        print(
-            "************************ Read Axis Error *******************************"
-        )
-        print("*    Axis errors: ", AxisError(self.__axis.error).name)
-        print("*    Axis motor errors: ", MotorError(self.__axis.motor.error).name)
-        print(
-            "*    Axis controller errors: ",
-            ControllerError(self.__axis.controller.error).name,
-        )
-        print(
-            "************************************************************************"
-        )
+        print("* Axis errors: ", AxisError(self.__axis.error).name)
+        print("* Axis motor errors: ", MotorError(self.__axis.motor.error).name)
+        print("* Controller errors: ", ControllerError(self.__axis.controller.error).name)
 
     def set_controller_config_position_control(self):
         while True:
@@ -138,3 +146,10 @@ class MotorController(DeviceManager):
 
     def read_motor_current_state(self):
         return self.__axis.current_state
+    
+    def read_motor_minstop_state(self):
+        if(self.__axis.min_endstop.endstop_state):
+            self.__axis.error = 0
+            return True
+        else:
+            return False

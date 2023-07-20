@@ -6,10 +6,11 @@ from helpers.enums import *
 import time
 import sys
 from helpers.axis_params import AxisParameter
-import random
+import math
 import tkinter as tk
 
-WAITING_TIME_LOOP = 0.2
+WAITING_TIME_LOOP = 0.180
+MAX_NOT_CHANGE = 0.2
 PROXIMITY_SENSOR_PIN = 6
 
 global_current_profile = None
@@ -60,7 +61,7 @@ def set_position_to_zero():
     __slow_profile()
 
 def start_parking_torque_control():
-    my_list = []
+    less_counter = 0
     motor_controller.motor_idel()
     motor_controller.wait_to_idel()
     motor_controller.set_controller_config_control_torque_mode()
@@ -75,17 +76,17 @@ def start_parking_torque_control():
     while True:
         current_position = motor_controller.read_estimate_position()
         position_change = abs(current_position - previous_position)
-        
+        print("Position Change : ", position_change)
         no_change_counter += 1
-        sys.stdout.write('\r' + "Parking" + '.' * no_change_counter)
-        sys.stdout.flush()
+        # sys.stdout.write('\r' + "Parking" + '.' * no_change_counter)
+        # sys.stdout.flush()
         
-        if position_change < 0.1:
-            my_list.append(True)
+        if position_change < MAX_NOT_CHANGE:
+            less_counter += 1
         else:
-            my_list.clear()
+            less_counter = 0
 
-        if len(my_list) > 10:
+        if less_counter > 10:
             break
         previous_position = current_position
         time.sleep(WAITING_TIME_LOOP)
@@ -129,7 +130,7 @@ def start_homing():
     motor_controller.wait_to_idel()
 
 def start_parking_velocity_control():
-    my_list = []
+    less_counter = 0
     motor_controller.motor_idel()
     motor_controller.wait_to_idel()
     motor_controller.set_enable_min_endstop(False)
@@ -155,12 +156,12 @@ def start_parking_velocity_control():
         sys.stdout.write('\r' + "Parking" + '.' * no_change_counter)
         sys.stdout.flush()
         
-        if position_change < 0.2:
-            my_list.append(True)
+        if position_change < MAX_NOT_CHANGE:
+           less_counter += 1
         else:
-            my_list.clear()
+            less_counter = 0
 
-        if len(my_list) > 10:
+        if less_counter > 10:
             break
         previous_position = current_position
         time.sleep(WAITING_TIME_LOOP)
@@ -173,7 +174,7 @@ def start_parking_velocity_control():
     __slow_profile()
 
 def start_parking_position_control():
-    my_list = []
+    less_counter = 0
     motor_controller.motor_idel()
     motor_controller.wait_to_idel()
     motor_controller.set_enable_min_endstop(False)
@@ -197,17 +198,16 @@ def start_parking_position_control():
         sys.stdout.write('\r' + "Parking" + '.' * no_change_counter)
         sys.stdout.flush()
         
-        if position_change < 0.2:
-            my_list.append(True)
+        if position_change < MAX_NOT_CHANGE:
+            less_counter += 1
         else:
-            my_list.clear()
+            less_counter = 0
 
-        if len(my_list) > 10:
+        if less_counter > 10:
             break
         previous_position = current_position
         time.sleep(WAITING_TIME_LOOP)
     print("")
-    motor_controller.set_velocity(0)
     motor_controller.motor_idel()
     odrive_controller.read_errors()
     motor_controller.read_errors()
@@ -223,11 +223,6 @@ def read_error():
 
 def reset_odrive_config():
     odrive_controller.reset_config()
-
-print("Finding an ODrive...")
-odrv0 = odrive.find_any()
-odrive_controller = ODriveController(odrv0)
-motor_controller = MotorController(odrive_controller, "axis0")
 
 def on_slide(value):
     motor_controller.set_position(value)
@@ -245,12 +240,23 @@ def moving_control():
     root.mainloop()
     __slow_profile()
 
+def demo_test_setpoint():
+    motor_controller.motor_closed_loop_control()
+    print("Bus voltage is " + str(odrv0.vbus_voltage) + "V")
+    odrv0.axis0.controller.input_pos = 3.14
+    print("Position setpoint is " + str(odrv0.axis0.controller.pos_setpoint))
+
+print("Finding an ODrive...")
+odrv0 = odrive.find_any()
+odrive_controller = ODriveController(odrv0)
+motor_controller = MotorController(odrive_controller, "axis0")
+
 while True:
     print("******* Profile ", global_current_profile)
     print("****************************** Please select Commands Id *********************************")
     print("*              1. Need cralibration             12. Moving axis                          *")
     print("*              2. Move to zero                  13. Parking position                     *")
-    print("*              3. Move to 100                                                            *")
+    print("*              3. Move to 100                   14. Demo setpoint                        *")
     print("*              4. Parking velocity                                                       *") 
     print("*              5. Clear errors                                                           *")
     print("*              6. Start homing                                                           *")
@@ -263,6 +269,10 @@ while True:
 
     cmd_id_input = input("Enter Your Command Id: ")
     cmd_id = int(cmd_id_input)
+
+    
+    number_input = input("รับจำนวนจากผู้ใช้: ")
+    number_ = int(number_input)
 
     if cmd_id == 1:
         setup_and_calibration()
@@ -290,6 +300,8 @@ while True:
         moving_control()
     elif cmd_id == 13:
         start_parking_position_control()
+    elif cmd_id == 14:
+        demo_test_setpoint()
     else:
         print("Unknow CMD!!!")
 

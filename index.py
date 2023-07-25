@@ -270,10 +270,6 @@ while True:
     cmd_id_input = input("Enter Your Command Id: ")
     cmd_id = int(cmd_id_input)
 
-    
-    number_input = input("รับจำนวนจากผู้ใช้: ")
-    number_ = int(number_input)
-
     if cmd_id == 1:
         setup_and_calibration()
     elif cmd_id == 2:

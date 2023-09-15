@@ -12,8 +12,22 @@ def is_traj_pos_done():
          print("timeout!")
          return False
       if motor_controller.read_trap_traj_status():
-        print("done!")
+        print("over!")
         return True
+      
+def is_Iq_measured_over(target):
+   start_time_checking = time.time()
+   while True:
+      if time.time() - start_time_checking > 50:
+         motor_controller.motor_idel()
+         print("timeout!")
+         return False
+      current_Iq = motor_controller.read_estimate_Iq_measured()
+      print(abs(current_Iq))
+      if abs(current_Iq) > target:
+         return True
+      
+      
 
 print("Finding an ODrive...")
 odrv0 = odrive.find_any()
@@ -42,19 +56,13 @@ motor_controller.set_controlller_config_velocity_control()
 motor_controller.motor_closed_loop_control()
 motor_controller.set_velocity(-2)
 
-start_time = time.time()
-while time.time() - start_time < 50:
-    current_Iq = motor_controller.read_estimate_Iq_measured()
-    print(abs(current_Iq))
-    if abs(current_Iq) > 45:
-       motor_controller.motor_idel()
-       break
+is_Iq_measured_over(45)
 
 motor_controller.motor_idel()
 motor_controller.set_controller_config_position_control()
 motor_controller.motor_closed_loop_control()
 current_pos = motor_controller.read_estimate_position()
-middle_pos = motor_controller.read_estimate_position() + 11
+middle_pos = motor_controller.read_estimate_position() + 12
 print("current pos : ", current_pos)
 print("middle offset : ", middle_pos)
 motor_controller.set_position(middle_pos)

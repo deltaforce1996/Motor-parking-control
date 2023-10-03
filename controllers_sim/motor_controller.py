@@ -1,6 +1,7 @@
 import time
 from helpers.axis_params import AxisParameter
 from helpers.enums import *
+import sys
 
 class MotorController():
     def __init__(self, odrive_controller, axis):
@@ -37,6 +38,19 @@ class MotorController():
         print("Read axis param [", param_name, "] = ", attr_axis)
         return attr_axis
     
+    def wait_to_idel(self):
+        no_change_counter = 0
+        last_state = None
+        while self.read_motor_current_state() != AxisState.IDLE.value:
+            current_state = AxisState(self.read_motor_current_state()).name
+            if last_state == current_state:
+                no_change_counter += 1
+            sys.stdout.write('\r' + current_state + '.' * no_change_counter)
+            sys.stdout.flush()
+            last_state = current_state
+            time.sleep(self.__WAITING_TIME_LOOP)
+        if(no_change_counter > 0): print("")
+    
     def motor_idel(self):
         while True:
             self.set_axis_parameter(AxisParameter.CONTROL_CONF_REQ_STATE, AxisState.IDLE.value, False)
@@ -55,12 +69,30 @@ class MotorController():
                 break
             time.sleep(self.__WAITING_TIME_LOOP)
 
+    def motor_calibrate_control(self):
+         while True:
+            self.set_axis_parameter(AxisParameter.CONTROL_CONF_REQ_STATE, AxisState.MOTOR_CALIBRATION.value, False)
+            is_motor_calibration =  self.read_motor_current_state() == AxisState.MOTOR_CALIBRATION.value 
+            print("motor is_motor_calibration: ", is_motor_calibration)
+            if is_motor_calibration:
+                break
+            time.sleep(self.__WAITING_TIME_LOOP)
+
     def motor_index_search(self):
         while True:
             self.set_axis_parameter(AxisParameter.CONTROL_CONF_REQ_STATE, AxisState.ENCODER_INDEX_SEARCH.value, False)
             index_search = self.read_motor_current_state() == AxisState.ENCODER_INDEX_SEARCH.value
             print("motor state is index_search: ", index_search)
             if index_search:
+                break
+            time.sleep(self.__WAITING_TIME_LOOP)
+
+    def motor_index_encoder_offset(self):
+        while True:
+            self.set_axis_parameter(AxisParameter.CONTROL_CONF_REQ_STATE, AxisState.ENCODER_OFFSET_CALIBRATION.value, False)
+            index_offset_calibration = self.read_motor_current_state() == AxisState.ENCODER_OFFSET_CALIBRATION.value
+            print("motor_index_encoder_offset: ", index_offset_calibration)
+            if index_offset_calibration:
                 break
             time.sleep(self.__WAITING_TIME_LOOP)
 

@@ -15,6 +15,7 @@ class AxisParameter:
 
     ENCODER_CONF_CPR = "encoder.config.cpr"
     ENCODER_CONF_BAND_WIDTH = "encoder.config.bandwidth"
+    ENCODER_CONF_PRE_CALI = "encoder.config.pre_calibrated"
 
     CONF_CALI_LOCK_CURRENT = "config.calibration_lockin.current"
     CONF_CALI_LOCK_RAMP_TIME = "config.calibration_lockin.ramp_time"

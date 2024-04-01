@@ -10,6 +10,7 @@ class AxisParameter:
     MOTOR_CONF_CURRENT_LIMIT = "motor.config.current_lim"
     MOTOR_CONF_REQ_CURRENT_RANGE = "motor.config.requested_current_range"
     MOTOR_CONF_TORQ_CONST = "motor.config.torque_constant"
+    MOTOR_CONF_PRE_CALI = "motor.config.pre_calibrated"
 
     MOTOR_CURRENT_STATE = "current_state"
 

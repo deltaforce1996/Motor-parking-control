@@ -21,6 +21,7 @@ motor_controller.motor_index_encoder_offset()
 motor_controller.wait_to_idel()
 time.sleep(2)
 motor_controller.set_axis_parameter(AxisParameter.ENCODER_CONF_PRE_CALI, 1, True)
+motor_controller.set_axis_parameter(AxisParameter.MOTOR_CONF_PRE_CALI, 1, True)
 
 motor_controller.read_errors()
 

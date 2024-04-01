@@ -9,3 +9,12 @@ Starting calibration, move to zero position, move to 100 position, set velocity 
 
 #### Needed
 * Odrivetool
+
+
+#### How to script odrive cali
+Motor Cali
+Index
+endcoer offset cali
+
+motot pre cali is true
+ecoder pre cali is true
